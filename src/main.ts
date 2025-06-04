@@ -17,7 +17,7 @@ void (async () => {
   app.useGlobalPipes(new ValidationPipe())
   app.enableCors({
     origin: '*',
-    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+    methods: 'GET,POST,PUT,DELETE',
     allowedHeaders: 'Content-Type, Accept, Authorization'
   })
 

@@ -9,24 +9,34 @@ datasource db {
 }
 
 model Article {
-  id        String   @id @default(uuid())
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  title     String
-  content   String
-  tags      String[]
-  authorId  String
-  Author    Author   @relation(fields: [authorId], references: [id])
+  articleId   String    @id @default(uuid())
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime? @updatedAt
+  title       String
+  description String?
+  content     String
+  tags        String[]
+  authorId    String
+  Author      Author    @relation(fields: [authorId], references: [authorId])
 }
 
 model Author {
+  authorId         String            @id @default(uuid())
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime?         @updatedAt
+  name             String
+  surname          String
+  username         String            @unique
+  email            String            @unique
+  articles         Article[]
+  AuthorCredential AuthorCredential?
+}
+
+model AuthorCredential {
   id        String    @id @default(uuid())
   createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  name      String
-  surname   String
-  username  String    @unique
-  email     String    @unique
+  updatedAt DateTime? @updatedAt
   password  String
-  articles  Article[]
+  authorId  String    @unique
+  author    Author    @relation(fields: [authorId], references: [authorId], onDelete: Cascade)
 }

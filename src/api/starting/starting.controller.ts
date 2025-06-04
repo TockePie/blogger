@@ -1,6 +1,5 @@
-import { Controller, Get, Res } from '@nestjs/common'
+import { Controller, Get } from '@nestjs/common'
 import { ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger'
-import { Response } from 'express'
 
 @ApiTags('Base path')
 @Controller()
@@ -10,14 +9,21 @@ export class StartingController {
   @Get()
   @ApiOperation({
     summary: 'Get greeting message',
-    description: 'Returns a simple greeting message in plain text format'
+    description: 'Returns a simple greeting message in HTML format'
   })
   @ApiOkResponse({
     description:
-      'Hello from NestJS! \n This is my first pet-project with Nest.js.'
+      'Hello from NestJS! \n This is my first pet-project with Nest.js.',
+    content: {
+      'text/html': {
+        schema: {
+          type: 'string'
+        }
+      }
+    }
   })
-  getHtml(@Res() res: Response): void {
-    const html = `
+  getHtml(): string {
+    return `
     <!DOCTYPE html>
     <html>
         <head>
@@ -32,6 +38,5 @@ export class StartingController {
         </body>
     </html>
     `
-    res.type('html').send(html)
   }
 }

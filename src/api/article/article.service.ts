@@ -1,94 +1,131 @@
 import { UUID } from 'node:crypto'
 
-import { Injectable, NotFoundException } from '@nestjs/common'
+import {
+  Injectable,
+  NotFoundException,
+  UnauthorizedException
+} from '@nestjs/common'
 
 import { PrismaService } from '../../config/prisma/prisma.service'
 
-import { ArticleCreateDto } from './article.dto'
+import { ArticleCreateDto } from './dto/article.dto'
 
 @Injectable()
 export class ArticleService {
-  constructor(private readonly prismaService: PrismaService) {}
+  constructor(private prismaService: PrismaService) {}
 
-  async getArticles(): Promise<ArticleCreateDto[]> {
-    const articles = await this.prismaService.article.findMany()
+  async getArticles(authorId?: UUID) {
+    if (authorId) {
+      const authorExists = await this.prismaService.author.findUnique({
+        where: {
+          authorId
+        }
+      })
 
-    if (articles.length === 0) {
-      throw new NotFoundException('No articles found')
+      if (!authorExists) {
+        throw new NotFoundException(`Author with id ${authorId} not found`)
+      }
+
+      return await this.prismaService.article.findMany({
+        where: {
+          authorId
+        }
+      })
     }
 
-    return articles
+    return await this.prismaService.article.findMany()
   }
 
-  async getArticleById(id: UUID): Promise<ArticleCreateDto> {
+  async createArticle(
+    body: ArticleCreateDto & {
+      authorId: UUID
+    }
+  ) {
+    const authorExists = await this.prismaService.author.findUnique({
+      where: {
+        authorId: body.authorId
+      }
+    })
+    if (!authorExists) {
+      throw new NotFoundException(`Author with id ${body.authorId} not found`)
+    }
+
+    return await this.prismaService.article.create({
+      data: {
+        title: body.title,
+        content: body.content,
+        description: body.description,
+        authorId: body.authorId
+      }
+    })
+  }
+
+  async getArticleById(articleId: UUID) {
     const article = await this.prismaService.article.findUnique({
       where: {
-        id
+        articleId
       }
     })
 
     if (!article) {
-      throw new NotFoundException(`Article with id ${id} not found`)
+      throw new NotFoundException(`Article with id ${articleId} not found`)
     }
 
     return article
   }
 
-  async createArticle(body: ArticleCreateDto) {
-    const authorExists = await this.prismaService.author.findUnique({
+  async updateArticle(
+    articleId: UUID,
+    body: ArticleCreateDto & {
+      authorId: UUID
+    }
+  ) {
+    const article = await this.prismaService.article.findUnique({
       where: {
-        id: body.authorId
+        articleId
       }
     })
 
-    if (!authorExists) {
-      throw new NotFoundException(`Author with id ${body.authorId} not found`)
+    if (!article) {
+      throw new NotFoundException(`Article with id ${articleId} not found`)
     }
 
-    return this.prismaService.article.create({
-      data: {
-        title: body.title,
-        content: body.content,
-        authorId: body.authorId
-      }
-    })
-  }
+    if (article.authorId !== body.authorId) {
+      throw new UnauthorizedException(
+        `Author with id ${body.authorId} does not match article's author`
+      )
+    }
 
-  updateArticle(id: UUID, body: ArticleCreateDto) {
-    return this.prismaService.article.update({
+    return await this.prismaService.article.update({
       where: {
-        id
+        articleId
       },
       data: {
         title: body.title,
+        description: body.description,
         content: body.content,
-        authorId: body.authorId
+        tags: body.tags
       }
     })
   }
 
-  async deleteArticle(id: UUID) {
-    try {
-      const article = await this.prismaService.article.findUnique({
-        where: {
-          id
-        }
-      })
+  async deleteArticle(articleId: UUID, authorId: UUID): Promise<void> {
+    const article = await this.prismaService.article.findUnique({
+      where: { articleId }
+    })
 
-      if (!article) {
-        return new NotFoundException(`Article with id ${id} not found`)
-      }
-
-      return this.prismaService.article.delete({
-        where: {
-          id
-        }
-      })
-    } catch (error: unknown) {
-      if (error instanceof Error) {
-        return error
-      }
-      return new Error('An unknown error occurred')
+    if (!article) {
+      throw new NotFoundException(`Article with id ${articleId} not found`)
     }
+
+    if (article.authorId !== authorId) {
+      throw new UnauthorizedException(
+        `Author with id ${authorId} does not match article's author`
+      )
+    }
+
+    await this.prismaService.article.delete({ where: { articleId } })
+
+    return
   }
 }

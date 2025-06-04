@@ -4,7 +4,7 @@ import { ConfigModule } from '@nestjs/config'
 import { LoggerMiddleWare } from '../common/middlewares/logger.middleware'
 
 import { ArticleModule } from './article/article.module'
-import { AuthorModule } from './author/author.module'
+import { AuthModule } from './auth/auth.module'
 import { StartingModule } from './starting/starting.module'
 
 @Module({
@@ -15,7 +15,7 @@ import { StartingModule } from './starting/starting.module'
       envFilePath: ['.env']
     }),
     StartingModule,
-    AuthorModule
+    AuthModule
   ],
   controllers: [],
   providers: []

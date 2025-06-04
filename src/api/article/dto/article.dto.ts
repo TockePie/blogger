@@ -1,5 +1,3 @@
-import { UUID } from 'node:crypto'
-
 import { ApiProperty } from '@nestjs/swagger'
 import {
   IsDateString,
@@ -31,24 +29,25 @@ export class ArticleCreateDto {
   })
   content: string
 
+  @IsString()
+  @IsOptional()
+  @ApiProperty({
+    description: 'A short description of the article',
+    type: String,
+    example: 'An introduction to writing articles',
+    required: false
+  })
+  description?: string | null
+
+  @IsString({ each: true })
+  @IsOptional()
   @ApiProperty({
     description: 'Tags associated with the article',
     type: [String],
     example: ['introduction', 'writing', 'first article'],
     required: false
   })
-  @IsString({ each: true })
-  @IsOptional()
   tags?: string[]
-
-  @ApiProperty({
-    description: 'Author ID of the article',
-    type: String,
-    format: 'uuid',
-    example: 'ece86a9f-72cd-469f-9dc9-7c5ffeda27b0'
-  })
-  @IsString()
-  authorId: string
 }
 
 export class ArticleDto extends ArticleCreateDto {
@@ -59,7 +58,16 @@ export class ArticleDto extends ArticleCreateDto {
     example: '123e4567-e89b-12d3-a456-426614174000'
   })
   @IsUUID('4')
-  id: UUID
+  articleId: string
+
+  @ApiProperty({
+    description: 'Author ID of the article',
+    type: String,
+    format: 'uuid',
+    example: 'ece86a9f-72cd-469f-9dc9-7c5ffeda27b0'
+  })
+  @IsUUID('4')
+  authorId: string
 
   @ApiProperty({
     description: 'Creation date of the article',
@@ -68,9 +76,8 @@ export class ArticleDto extends ArticleCreateDto {
     example: '2023-10-01T12:00:00Z',
     required: false
   })
-  @IsOptional()
   @IsDateString()
-  createdAt?: Date
+  readonly createdAt: Date
 
   @ApiProperty({
     description: 'Last update date of the article',
@@ -81,5 +88,5 @@ export class ArticleDto extends ArticleCreateDto {
   })
   @IsOptional()
   @IsDateString()
-  updatedAt?: Date
+  readonly updatedAt?: Date | null
 }

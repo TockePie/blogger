@@ -9,6 +9,7 @@ import {
   IsOptional,
   IsString,
   IsUUID,
+  Matches,
   MinLength
 } from 'class-validator'
 
@@ -16,6 +17,9 @@ export class AuthorCreateDto {
   @IsString()
   @IsNotEmpty()
   @MinLength(3)
+  @Matches(/^[a-zA-Z]+$/, {
+    message: 'Only letters are allowed'
+  })
   @ApiProperty({
     description: 'First name of the author',
     type: String,
@@ -26,6 +30,9 @@ export class AuthorCreateDto {
   @IsString()
   @IsNotEmpty()
   @MinLength(3)
+  @Matches(/^[a-zA-Z]+$/, {
+    message: 'Only letters are allowed'
+  })
   @ApiProperty({
     description: 'Last name of the author',
     type: String,
@@ -36,10 +43,13 @@ export class AuthorCreateDto {
   @IsString()
   @IsNotEmpty()
   @MinLength(5)
+  @Matches(/^[_.a-z0-9]+$/)
+  @Transform(({ value }: { value: string }) => value.toLowerCase())
   @ApiProperty({
-    description: 'Username of the author. Should be unique.',
+    description:
+      'Username of the author. Should be unique. Can contain letters, numbers, underscores, and dots.',
     type: String,
-    example: 'johndoe',
+    examples: ['johndoe', 'john_doe', 'john.doe123'],
     uniqueItems: true
   })
   username: string
@@ -57,13 +67,14 @@ export class AuthorCreateDto {
 
   @IsString()
   @IsNotEmpty()
-  @Exclude()
+  @MinLength(8)
+  @Exclude({ toPlainOnly: true })
   @ApiProperty({
     description:
-      'Password of the author. Should be at least 6 characters long.',
+      'Password of the author. Should be at least 8 characters long.',
     type: String,
     example: 'securepassword',
-    minLength: 6
+    minLength: 8
   })
   password: string
 }
@@ -79,18 +90,14 @@ export class AuthorDto extends AuthorCreateDto {
   id: UUID
 
   @ApiProperty({
-    description: 'Creation date of the author record',
     type: String,
     format: 'date-time',
-    example: '2023-10-01T12:00:00Z',
-    required: false
+    example: '2023-10-01T12:00:00Z'
   })
-  @IsOptional()
   @IsDateString()
   createdAt: string
 
   @ApiProperty({
-    description: 'Last update date of the author record',
     type: String,
     format: 'date-time',
     example: '2023-10-02T12:00:00Z',
