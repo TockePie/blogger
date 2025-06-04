@@ -6,12 +6,12 @@ import chalk from 'chalk'
 import { AppModule } from './api/app.module'
 import { PrismaClientExceptionFilter } from './config/prisma-client-exception.filter'
 
-const PORT = process.env.PORT ?? 4000
-const API_PATH = process.env.API_PATH ?? '/api'
-
-void (async () => {
+const bootstrap = async () => {
   const app = await NestFactory.create(AppModule)
   const { httpAdapter } = app.get(HttpAdapterHost)
+
+  const PORT = process.env.PORT ?? 3000
+  const API_PATH = process.env.API_PATH ?? '/api'
 
   app.useGlobalFilters(new PrismaClientExceptionFilter(httpAdapter))
   app.useGlobalPipes(new ValidationPipe())
@@ -39,4 +39,6 @@ void (async () => {
   console.log(chalk.blue(`OpenAPI docs: http://localhost:${PORT}${API_PATH}`))
 
   await app.listen(PORT)
-})()
+}
+
+bootstrap()
