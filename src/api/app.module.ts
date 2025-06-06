@@ -1,5 +1,7 @@
+import { CacheModule } from '@nestjs/cache-manager'
 import { MiddlewareConsumer, Module } from '@nestjs/common'
-import { ConfigModule } from '@nestjs/config'
+import { ConfigModule, ConfigService } from '@nestjs/config'
+import { redisStore } from 'cache-manager-redis-store'
 
 import { LoggerMiddleWare } from '../common/middlewares/logger.middleware'
 
@@ -13,6 +15,22 @@ import { StartingModule } from './starting/starting.module'
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: ['.env']
+    }),
+    CacheModule.registerAsync({
+      isGlobal: true,
+      imports: [ConfigModule],
+      useFactory: async (config: ConfigService) => {
+        const store = await redisStore({
+          ttl: 60, // seconds
+          socket: {
+            host: config.get<string>('REDIS_HOST'),
+            port: parseInt(config.get<string>('REDIS_PORT')!)
+          }
+        })
+
+        return { store: () => store }
+      },
+      inject: [ConfigService]
     }),
     StartingModule,
     AuthModule

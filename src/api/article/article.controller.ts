@@ -1,5 +1,6 @@
 import { UUID } from 'node:crypto'
 
+import { CacheInterceptor, CacheKey } from '@nestjs/cache-manager'
 import {
   Body,
   Controller,
@@ -10,7 +11,8 @@ import {
   Put,
   Query,
   UnauthorizedException,
-  UseGuards
+  UseGuards,
+  UseInterceptors
 } from '@nestjs/common'
 import { AuthGuard } from '@nestjs/passport'
 import {
@@ -28,10 +30,12 @@ import { ArticleCreateDto, ArticleDto } from './dto/article.dto'
 import { ArticleService } from './article.service'
 
 @Controller('article')
+@UseInterceptors(CacheInterceptor)
 export class ArticleController {
   constructor(private readonly article: ArticleService) {}
 
   @Get()
+  @CacheKey('get-articles')
   @ApiOperation({
     summary: 'Get all articles',
     description:
@@ -59,7 +63,12 @@ export class ArticleController {
     }
   })
   async getArticles(@Query('authorId') authorId?: UUID): Promise<ArticleDto[]> {
-    return this.article.getArticles(authorId)
+    // return this.article.getArticles(authorId)
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve(this.article.getArticles(authorId))
+      }, 1000)
+    })
   }
 
   @Post()
